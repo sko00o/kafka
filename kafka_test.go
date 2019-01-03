@@ -10,11 +10,13 @@ import (
 )
 
 const (
-	zkServer    = "192.168.2.43:2181"
-	kafkaServer = "192.168.2.43:9092"
-	topic       = "test_topic2"
-	groupID     = "test_group1"
-	gapTime     = time.Second * 2
+	zkServer     = "192.168.2.43:2181"
+	kafkaServer  = "192.168.2.43:9092"
+	kafkaServer1 = "192.168.2.43:9093"
+	kafkaServer2 = "192.168.2.43:9094"
+	topic        = "test_topic"
+	groupID      = "test_group"
+	gapTime      = time.Second * 2
 )
 
 func TestKafkaBackend(t *testing.T) {
@@ -52,7 +54,7 @@ func TestKafkaBackend(t *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		producer := NewKafkaProducer(kafkaServer)
+		producer := NewKafkaProducerCluster([]string{kafkaServer, kafkaServer1, kafkaServer2})
 		defer producer.Close()
 
 		for times := 0; times < 5; times++ {
