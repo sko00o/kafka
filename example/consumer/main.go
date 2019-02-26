@@ -19,12 +19,12 @@ bin/kafka-topics.sh --create \
 	--topic test_topic \
 	--replication-factor 1 \
 	--partitions 3 \
-	--zookeeper 192.168.125.119:2181
+	--zookeeper zk.domain:2181
 
 */
 
 const (
-	zkServer = "192.168.125.119:2181"
+	zkServer = "zk.domain:2181"
 	topic    = "test_topic"
 	groupID  = "test_group"
 )

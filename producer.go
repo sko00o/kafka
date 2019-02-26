@@ -62,7 +62,7 @@ func (k *KafkaProducer) Publish(topic string, data []byte) {
 		Value: sarama.ByteEncoder(data),
 	}
 
-	log.Debugf("publish %+v", msg)
+	log.Debugf("publish to [%s]: %s", topic, data)
 	k.msg <- msg
 }
 
