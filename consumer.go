@@ -2,14 +2,19 @@ package kafka
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/Shopify/sarama"
-	cluster "github.com/meitu/go-consumergroup"
+	"github.com/bsm/sarama-cluster"
 	log "github.com/sirupsen/logrus"
 )
 
 type KafkaConsumerCluster struct {
-	consumer *cluster.ConsumerGroup
+	consumer *cluster.Consumer
+
+	receiver sync.Map
+
+	stop chan interface{}
 }
 
 var (
@@ -22,47 +27,66 @@ func NewKafkaConsumerGroupCluster(addrs []string, topics []string) *KafkaConsume
 
 func NewKafkaConsumerGroupClusterWithGroupID(addrs []string, topics []string, gID string) *KafkaConsumerCluster {
 	cfg := cluster.NewConfig()
-	cfg.ZkList = addrs
-	cfg.TopicList = topics
-	cfg.GroupID = gID
+	cfg.Consumer.Return.Errors = true
 
-	consumer, err := cluster.NewConsumerGroup(cfg)
+	consumer, err := cluster.NewConsumer(addrs, gID, topics, cfg)
 	if err != nil {
 		panic(err)
 	}
 
-	if err = consumer.Start(); err != nil {
-		panic(err)
-	}
+	// Track errors
+	go func() {
+		for err := range consumer.Errors() {
+			log.Errorf("consumer error: %v", err.Error())
+		}
+	}()
 
 	kc := &KafkaConsumerCluster{
+		stop:     make(chan interface{}),
 		consumer: consumer,
 	}
 
-	return kc
-}
+	// init topic receiver
+	for _, topic := range topics {
+		kc.receiver.Store(topic, make(chan *sarama.ConsumerMessage))
+	}
 
-func (k *KafkaConsumerCluster) Receive(topic string) (<-chan *sarama.ConsumerMessage, error) {
-
-	// deal with error
+	// consume messages
 	go func() {
-		if topicErrChan, ok := k.consumer.GetErrors(topic); ok {
-			for err := range topicErrChan {
-				if err != nil {
-					log.WithField("topic", topic).Errorf("consumer error: %v", err)
+		for {
+			select {
+			case <-kc.stop:
+				return
+			case msg, ok := <-consumer.Messages():
+				if ok {
+					if msgChan, ok := kc.receiver.Load(msg.Topic); ok {
+						msgChan.(chan *sarama.ConsumerMessage) <- msg
+					}
+					consumer.MarkOffset(msg, "")
 				}
 			}
 		}
 	}()
 
-	msgChan, ok := k.consumer.GetMessages(topic)
+	return kc
+}
+
+func (k *KafkaConsumerCluster) Receive(topic string) (chan *sarama.ConsumerMessage, error) {
+
+	msgChan, ok := k.receiver.Load(topic)
 	if !ok {
 		return nil, fmt.Errorf("topic %s not found", topic)
 	}
-	return msgChan, nil
+
+	return msgChan.(chan *sarama.ConsumerMessage), nil
 }
 
 func (k *KafkaConsumerCluster) Close() {
 	log.Infoln("stop consume")
-	k.consumer.Stop()
+
+	close(k.stop)
+	if err := k.consumer.Close(); err != nil {
+		log.Error("stop consume error: %s", err)
+	}
+
 }

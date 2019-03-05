@@ -24,7 +24,7 @@ bin/kafka-topics.sh --create \
 */
 
 const (
-	zkServer = "zk.domain:2181"
+	zkServer = "kafka.domain:9092"
 	topic    = "test_topic"
 	groupID  = "test_group"
 )
