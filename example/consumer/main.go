@@ -24,20 +24,20 @@ bin/kafka-topics.sh --create \
 */
 
 const (
-	zkServer = "kafka.domain:9092"
-	topic    = "test_topic"
-	groupID  = "test_group"
+	kfkServer = "kafka.domain:9092"
+	topic     = "test_topic"
+	groupID   = "test_group"
 )
 
 func main() {
 
-	zk := flag.String("zk", zkServer, "set zookeeper host:port here")
+	kfk := flag.String("kfk", kfkServer, "set kafka host:port here")
 	tpc := flag.String("tpc", topic, "set topics here")
 	gid := flag.String("gid", groupID, "set groupID here")
 	flag.Parse()
 
 	c := kafka.NewKafkaConsumerGroupClusterWithGroupID(
-		strings.Split(*zk, ","),
+		strings.Split(*kfk, ","),
 		strings.Split(*tpc, ","),
 		*gid,
 	)
@@ -77,5 +77,4 @@ func main() {
 	<-sig
 	close(stop)
 	wg.Wait()
-
 }
