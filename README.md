@@ -4,4 +4,4 @@
 
 - [Shopify/sarama](https://github.com/Shopify/sarama)
 - [bsm/sarama-cluster](https://github.com/bsm/sarama-cluster)
-- [sirupsen/logrus](github.com/sirupsen/logrus)
+- [sirupsen/logrus](https://github.com/sirupsen/logrus)
