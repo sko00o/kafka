@@ -15,14 +15,13 @@ import (
 
 const (
 	kfkServer = "kafka.domain:9092"
-	topic     = "test_topic"
+	topics    = "test_topic,test_topic2"
 	groupID   = "test_group"
 )
 
 func main() {
-
 	kfk := flag.String("kfk", kfkServer, "set kafka host:port here")
-	tpc := flag.String("tpc", topic, "set topics here")
+	tpc := flag.String("tpc", topics, "set topics here")
 	gid := flag.String("gid", groupID, "set groupID here")
 	flag.Parse()
 
@@ -37,7 +36,12 @@ func main() {
 
 	for _, t := range strings.Split(*tpc, ",") {
 		if cm[t] == nil {
-			cm[t] = g.newReceiver(t)
+			c := g.newReceiver(t)
+			// unavailable when GroupID is set
+			/*if err := c.SetOffset(kafka.LastOffset); err != nil {
+				log.WithError(err).Error("set offset to last error")
+			}*/
+			cm[t] = c
 		}
 	}
 	defer func() {
@@ -53,7 +57,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	for _, c := range cm {
-		go func() {
+		go func(c *kafka.Reader) {
 			for {
 				m, err := c.ReadMessage(ctx)
 				if err != nil {
@@ -70,7 +74,7 @@ func main() {
 					"offset":    m.Offset,
 				}).Infof("receive: %s", m.Value)
 			}
-		}()
+		}(c)
 	}
 	log.Info("start consume")
 
@@ -85,6 +89,8 @@ type generator struct {
 }
 
 func (g *generator) newReceiver(topic string) *kafka.Reader {
+	log.WithField("topic", topic).Info("setup consume topic")
+
 	return kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  g.cBroker,
 		GroupID:  g.groupID,

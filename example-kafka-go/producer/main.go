@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"flag"
 	"os"
 	"os/signal"
@@ -45,11 +46,12 @@ func main() {
 		case <-sig:
 			return
 		case <-time.After(time.Second * 2):
-			msg := time.Now().String()
+			var msg [4]byte
+			_, _ = rand.Read(msg[:])
 
 			if err := p.WriteMessages(ctx, kafka.Message{
-				Key:   []byte("time"),
-				Value: []byte(msg),
+				Key:   []byte("random"),
+				Value: msg[:],
 			}); err != nil {
 				log.Error(err)
 				continue
