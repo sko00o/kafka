@@ -24,7 +24,7 @@ bin/kafka-topics.sh --create \
 */
 
 const (
-	kfkServer = "kafka.domain:9092"
+	kfkServer = "127.0.0.1:9092"
 	topic     = "test_topic"
 	groupID   = "test_group"
 )

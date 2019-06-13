@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	kafkaServers = "kafka.domain:9092"
+	kafkaServers = "127.0.0.1:9092"
 	topic        = "test_topic"
 )
 
