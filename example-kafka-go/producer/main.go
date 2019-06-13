@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"context"
-	"crypto/rand"
 	"flag"
+	"math/rand"
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -14,51 +17,90 @@ import (
 )
 
 const (
-	kafkaServers = "kafka.domain:9092"
-	topic        = "test_topic"
+	kfkServer = "127.0.0.1:9092"
+	topic     = "test_topic"
 )
 
-func main() {
-	kfk := flag.String("kfk", kafkaServers, "set kafka broker list here")
-	tpc := flag.String("tpc", topic, "set topic here")
+var (
+	kfk = flag.String("kfk", kfkServer, "set kafka host:port here")
+	tpc = flag.String("tpc", topic, "set topic here")
+	tmd = flag.Bool("t", false, "type message in console")
+	sig = make(chan os.Signal)
+)
+
+func init() {
 	flag.Parse()
+	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+}
 
-	ctx, cancel := context.WithCancel(context.Background())
+func main() {
+	run(context.Background(), *kfk, *tpc, *tmd)
+	log.Infof("quit by signal %s", <-sig)
+}
 
+func run(ctx context.Context, servers, topic string, typeMode bool) *sync.WaitGroup {
+	brokers := strings.Split(servers, ",")
 	p := kafka.NewWriter(kafka.WriterConfig{
-		Brokers: strings.Split(*kfk, ","),
-		Topic:   *tpc,
+		Brokers:   brokers,
+		Topic:     topic,
+		BatchSize: 1,
 	})
-	defer func() {
-		p.Close()
-		cancel()
-	}()
 
-	sig := make(chan os.Signal)
-	signal.Notify(sig, os.Interrupt)
-
-	log.SetLevel(log.DebugLevel)
-
-	log.Info("start produce")
-
-	for {
-		select {
-		case <-sig:
-			return
-		case <-time.After(time.Second * 2):
-			var msg [4]byte
-			_, _ = rand.Read(msg[:])
-
-			if err := p.WriteMessages(ctx, kafka.Message{
-				Key:   []byte("random"),
-				Value: msg[:],
-			}); err != nil {
-				log.Error(err)
-				continue
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func(ctx context.Context, wg *sync.WaitGroup, p *kafka.Writer) {
+		defer func() {
+			if err := p.Close(); err != nil {
+				log.Fatal(err)
 			}
+			log.WithField("topic", p.Stats().Topic).Info("closed")
+			wg.Done()
+		}()
 
-			log.Infof("send: %s", msg)
+		if typeMode {
+			input := bufio.NewScanner(os.Stdin)
+			for {
+				print("> ")
+				input.Scan()
+				msg := input.Text()
+
+				start := time.Now()
+				if err := p.WriteMessages(ctx, kafka.Message{
+					Key:   []byte("input"),
+					Value: []byte(msg),
+				}); err != nil {
+					if err == ctx.Err() {
+						return
+					}
+					log.Error(err)
+					continue
+				}
+				log.Infof("send: %s, spent: %s", string(msg), time.Since(start))
+			}
+		} else {
+			log.Info("send random bytes every 2s...")
+			rand.Seed(time.Now().Unix())
+			for {
+				var msg [4]byte
+				rand.Read(msg[:])
+
+				start := time.Now()
+				if err := p.WriteMessages(ctx, kafka.Message{
+					Key:   []byte("input"),
+					Value: msg[:],
+				}); err != nil {
+					if err == ctx.Err() {
+						return
+					}
+					log.Error(err)
+					continue
+				}
+				log.Infof("send: %x, spent: %s", msg, time.Since(start))
+
+				time.Sleep(2 * time.Second)
+			}
 		}
-	}
+	}(ctx, &wg, p)
 
+	return &wg
 }
