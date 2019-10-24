@@ -36,14 +36,20 @@ func init() {
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan interface{})
-	run(ctx, done, *kfk, *tpc, *gid, *sc)
-	log.Infof("quit by signal %s", <-sig)
-	cancel()
-	<-done
+	go run(ctx, *kfk, *tpc, *gid, *sc)
+
+	for {
+		select {
+		case s := <-sig:
+			log.Infof("quit by signal %s", s)
+			cancel()
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
-func run(ctx context.Context, done chan interface{}, servers, topics, groupID string, stringConvert bool) {
+func run(ctx context.Context, servers, topics, groupID string, stringConvert bool) {
 	h := func(ctx goka.Context, m interface{}) {
 		lg := log.WithField("topic", ctx.Topic())
 
@@ -72,7 +78,6 @@ func run(ctx context.Context, done chan interface{}, servers, topics, groupID st
 	}
 
 	go func() {
-		defer close(done)
 		if err := p.Run(ctx); err != nil {
 			log.Fatal(err)
 		}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"flag"
 	"math/rand"
 	"os"
@@ -33,8 +34,18 @@ func init() {
 }
 
 func main() {
-	run(*kfk, *tpc, *tmd)
-	log.Infof("quit by signal %s", <-sig)
+	ctx, cancel := context.WithCancel(context.Background())
+	go run(*kfk, *tpc, *tmd)
+
+	for {
+		select {
+		case s := <-sig:
+			log.Infof("quit by signal %s", s)
+			cancel()
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 func run(servers, topic string, typeMode bool) {
