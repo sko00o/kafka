@@ -1,5 +1,27 @@
 # simple kafka sub/pub example
 
+## Usage
+
+Get command line client
+
+If you have G0 1.11 or higher. enable `go mod` by `export GO111MODULE=on`
+
+Then run following line, tools will be installed in your `$GOPATH/bin` directory.
+
+```sh
+go get github.com/sko00o/kafka/example/consumer
+go get github.com/sko00o/kafka/example/producer
+```
+
+Try other implementations.
+
+```sh
+go get github.com/sko00o/kafka/example-goka/consumer
+go get github.com/sko00o/kafka/example-goka/producer
+go get github.com/sko00o/kafka/example-kafka-go/consumer
+go get github.com/sko00o/kafka/example-kafka-go/producer
+```
+
 ## Dependencies
 
 - [Shopify/sarama](https://github.com/Shopify/sarama)
