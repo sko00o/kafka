@@ -4,7 +4,7 @@
 
 Get command line client
 
-If you have G0 1.11 or higher. enable `go mod` by `export GO111MODULE=on`
+If you have Go 1.11 or higher. enable `go mod` by `export GO111MODULE=on`
 
 Then run following line, tools will be installed in your `$GOPATH/bin` directory.
 
