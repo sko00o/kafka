@@ -4,14 +4,11 @@ go 1.12
 
 require (
 	github.com/Shopify/sarama v1.22.0
-	github.com/brocaar/loraserver v2.5.0+incompatible
-	github.com/brocaar/lorawan v0.0.0-20190402092148-5bca41b178e9
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/golang/mock v1.3.1 // indirect
-	github.com/golang/protobuf v1.2.0
 	github.com/lovoo/goka v0.1.1
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/samuel/go-zookeeper v0.0.0-20180130194729-c4fab1ac1bec // indirect
