@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/lovoo/goka"
 	"github.com/lovoo/goka/codec"
@@ -30,8 +29,7 @@ var (
 
 func init() {
 	flag.Parse()
-	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
-	log.SetFormatter(&log.TextFormatter{TimestampFormat: time.RFC3339Nano})
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 }
 
 func main() {
@@ -51,7 +49,11 @@ func main() {
 
 func run(ctx context.Context, servers, topics, groupID string, stringConvert bool) {
 	h := func(ctx goka.Context, m interface{}) {
-		lg := log.WithField("topic", ctx.Topic())
+		lg := log.WithFields(log.Fields{
+			"topic":     ctx.Topic(),
+			"partition": ctx.Partition(),
+			"offset":    ctx.Offset(),
+		})
 
 		if stringConvert {
 			lg.Infof("receive: %x (%s)", m, m)
@@ -62,7 +64,11 @@ func run(ctx context.Context, servers, topics, groupID string, stringConvert boo
 
 	var es goka.Edges
 	for _, t := range strings.Split(topics, ",") {
-		e := goka.Input(goka.Stream(t), new(codec.Bytes), h)
+		topic := strings.TrimSpace(t)
+		if topic == "" {
+			continue
+		}
+		e := goka.Input(goka.Stream(topic), new(codec.Bytes), h)
 		es = append(es, e)
 	}
 	es = append(es, goka.Persist(new(codec.Int64)))

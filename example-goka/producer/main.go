@@ -30,7 +30,7 @@ var (
 
 func init() {
 	flag.Parse()
-	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 }
 
 func main() {

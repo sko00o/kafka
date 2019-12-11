@@ -30,11 +30,11 @@ var (
 
 func init() {
 	flag.Parse()
-	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 }
 
 func main() {
-	run(context.Background(), *kfk, *tpc, *tmd)
+	go run(context.Background(), *kfk, *tpc, *tmd)
 	log.Infof("quit by signal %s", <-sig)
 }
 
