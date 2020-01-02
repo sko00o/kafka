@@ -10,6 +10,10 @@ import (
 	"sync"
 	"syscall"
 
+	_ "github.com/segmentio/kafka-go/gzip"
+	_ "github.com/segmentio/kafka-go/lz4"
+	_ "github.com/segmentio/kafka-go/snappy"
+
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 )
