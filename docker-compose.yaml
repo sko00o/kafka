@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+
+  consumer:
+    restart: always
+    build:
+      context: .
+    command: >
+      consumer
+      -k kafka:9092
+      -t test
+      -v 2.4.0
+      --verbose
+    depends_on:
+      - kafka
+  producer:
+    restart: always
+    build:
+      context: .
+    command: >
+      producer
+      -k kafka:9092
+      -t test
+      -v 2.4.0
+    depends_on:
+      - kafka
+      - consumer
+
+  kafka:
+    restart: always
+    image: wurstmeister/kafka:2.12-2.5.1
+    environment:
+      KAFKA_LISTENERS: PLAINTEXT://:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: test:2:1
+    depends_on:
+      - zookeeper
+  zookeeper:
+    restart: always
+    image: zookeeper:3.5
