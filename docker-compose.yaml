@@ -38,4 +38,4 @@ services:
       - zookeeper
   zookeeper:
     restart: always
-    image: zookeeper:3.5
+    image: zookeeper:3.7.1
