@@ -1,10 +1,13 @@
-FROM golang:1.17 AS builder
+FROM golang:1.18 AS builder
 
 ARG APP
 ARG TAG
 WORKDIR /work
-COPY . .
 RUN mkdir -p bin
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+COPY . .
 RUN go build -o bin/kafka cmd/kafka-cli/main.go
 
 FROM debian:bullseye-slim

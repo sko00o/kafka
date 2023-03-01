@@ -1,4 +1,4 @@
-# simple kafka sub/pub example
+# simple kafka client wrap and cli tool
 
 ## Requirements
 
@@ -10,6 +10,12 @@ Get command line client
 
 ```sh
 go install github.com/sko00o/kafka/cmd/kafka-cli@latest
+```
+
+## Demo
+
+```sh
+docker compose up
 ```
 
 ## Thanks

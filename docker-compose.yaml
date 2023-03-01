@@ -7,35 +7,43 @@ services:
     build:
       context: .
     command: >
-      consumer
-      -k kafka:9092
-      -t test
-      -v 2.4.0
-      --verbose
+      consumer -k kafka:9092 -t test -v 2.5.1 --verbose
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
   producer:
     restart: always
     build:
       context: .
     command: >
-      producer
-      -k kafka:9092
-      -t test
-      -v 2.4.0
+      producer -k kafka:9092 -t test -v 2.5.1
     depends_on:
-      - kafka
-      - consumer
+      kafka:
+        condition: service_healthy
+      consumer:
+        condition: service_started
 
   kafka:
-    restart: always
     image: wurstmeister/kafka:2.12-2.5.1
+    restart: unless-stopped
     environment:
       KAFKA_LISTENERS: PLAINTEXT://:9092
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CREATE_TOPICS: test:2:1
+      KAFKA_CREATE_TOPICS: test:1:1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+    # https://docs.docker.com/compose/compose-file/#healthcheck
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "kafka-topics.sh --list --bootstrap-server localhost:9092 | grep -q 'test' || exit 1"
+        ]         
+      interval: 5s
+      timeout: 10s
+      retries: 10
     depends_on:
       - zookeeper
   zookeeper:
-    restart: always
     image: zookeeper:3.7.1
+    restart: unless-stopped
+
