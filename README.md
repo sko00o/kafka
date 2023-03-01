@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Go Version >= 1.17
+- Go Version >= 1.18
 
 ## Usage
 
