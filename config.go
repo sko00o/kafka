@@ -33,6 +33,7 @@ type ProducerConfig struct {
 	EnableAsyncErrors bool          `mapstructure:"enable_async_errors"`
 	BufferSize        int           `mapstructure:"buffer_size"`
 	DialTimeout       time.Duration `mapstructure:"dial_timeout"`
+	Idempotent        bool          `mapstructure:"idempotent"`
 
 	// kafka-go only
 	Balancer           string `mapstructure:"balancer"`

@@ -12,3 +12,18 @@ down:
 	docker compose down -v --remove-orphans
 
 .PHONY: all demo up watch down
+
+run-consumer:
+	docker compose exec -it consumer \
+		/app/kafka consumer \
+			-k kafka:9092 \
+			-t test1 \
+			-v 2.5.1 \
+			--verbose
+run-producer:
+	docker compose exec -it producer \
+		/app/kafka producer \
+			-k kafka:9092 \
+			-t test1 \
+			-v 2.5.1 \
+			--sarama --type --idempotent

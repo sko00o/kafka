@@ -25,6 +25,11 @@ func New(c sk.ProducerConfig, options ...OptionFunc) (*Handler, error) {
 	}
 
 	cfg := sarama.NewConfig()
+	if c.Idempotent {
+		cfg.Producer.Idempotent = true
+		cfg.Producer.RequiredAcks = sarama.WaitForAll
+		cfg.Net.MaxOpenRequests = 1
+	}
 	cfg.Producer.RequiredAcks = sarama.RequiredAcks(c.RequiredAcks)
 
 	if v := c.Version; v != "" {

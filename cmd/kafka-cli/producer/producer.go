@@ -43,6 +43,8 @@ func NewCommand() *cobra.Command {
 	flags.StringP("compression", "p", "", "compression for produce")
 	flags.BoolP("async", "a", false, "enable async mode")
 	flags.StringP("version", "v", "", "set kafka version (optional)")
+	flags.BoolP("idempotent", "i", false, "enable idempotent producer")
+	flags.IntP("required_acks", "r", -1, "set required acks")
 
 	flags.StringVarP(&topic, "topic", "t", "test_topic", "topic for produce")
 	flags.BoolVar(&useSarama, "sarama", false, "use sarama client")
