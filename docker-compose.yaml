@@ -29,21 +29,30 @@ services:
     environment:
       KAFKA_LISTENERS: PLAINTEXT://:9092
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CREATE_TOPICS: test:1:1
+      KAFKA_CREATE_TOPICS: test:1:1,test1:1:1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
     # https://docs.docker.com/compose/compose-file/#healthcheck
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "kafka-topics.sh --list --bootstrap-server localhost:9092 | grep -q 'test' || exit 1"
-        ]         
+          "kafka-topics.sh --list --bootstrap-server localhost:9092 | awk 'BEGIN { count=0 } /^test$|^test1$/ { count++ } END { exit (count == 2) ? 0 : 1 }'"
+        ]
       interval: 5s
       timeout: 10s
       retries: 10
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
   zookeeper:
     image: zookeeper:3.7.1
     restart: unless-stopped
-
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "echo stat / | zkCli.sh -server 127.0.0.1:2181"
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
